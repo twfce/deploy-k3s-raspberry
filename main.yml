@@ -1,0 +1,34 @@
+---
+- import_playbook: ./playbooks/deploy_hcloud_environment.yml
+
+- name: Refresh inventory
+  hosts: localhost
+  tasks:
+    - meta: refresh_inventory
+
+- name: Update all servers
+  hosts: all
+  vars:
+  tasks:
+    - debug:
+        msg: "master node: {{ master_node }} ({{ master_ip }})"
+    - apt:
+        upgrade: yes
+        update_cache: yes
+
+- hosts: all
+  gather_facts: yes
+  become: yes
+  roles:
+    - role: prereq
+    - role: download
+
+- hosts: master
+  become: yes
+  roles:
+    - role: k3s/master
+
+- hosts: node
+  become: yes
+  roles:
+    - role: k3s/node

@@ -1,0 +1,66 @@
+- name: Create required servers
+  hosts: localhost
+  vars:
+    env_name: dev
+    hcloud_token: "{{ lookup('env','HCLOUD_TOKEN') }}"
+    masters_count: 3
+    nodes_count: 3
+    deploy_nodes: no
+    environment_state: present
+    ssh_keys:
+      - twfce
+  tasks:
+    - name: Deploy cluster backend network
+      hcloud_network:
+        name: "{{ env_name }}-cluster-backend"
+        ip_range: 10.0.0.0/8
+        labels:
+          environment: "{{ env_name }}"
+        state: "{{ environment_state }}"
+    - name: Deploy backend network subnet
+      hcloud_subnetwork:
+        network: "{{ env_name }}-cluster-backend"
+        ip_range: 10.0.0.0/16
+        network_zone: eu-central
+        type: cloud
+        state: "{{ environment_state }}"
+      when: environment_state == "present"
+      ignore_errors: yes
+    - name: Deploy environment masters
+      hcloud_server:
+        api_token: "{{ hcloud_token }}"
+        name: "k3s-{{ env_name }}-master-{{ item }}"
+        server_type: "cpx21"
+        image: ubuntu-20.04
+        location: fsn1
+        labels:
+          node_type: master
+          environment: "{{ env_name }}"
+        ssh_keys: "{{ ssh_keys }}"
+        state: "{{ environment_state }}"
+      with_sequence: start=1 end="{{ masters_count | int }}"
+    - name: Deploy environment nodes
+      hcloud_server:
+        api_token: "{{ hcloud_token }}"
+        name: "k3s-{{ env_name }}-node-{{ item }}"
+        server_type: "cx11"
+        image: ubuntu-20.04
+        location: fsn1
+        labels:
+          node_type: node
+          environment: "{{ env_name }}"
+        ssh_keys: "{{ ssh_keys }}"
+        state: "{{ environment_state }}"
+      with_sequence: start=1 end="{{ nodes_count | int }}"
+      when: deploy_nodes
+    - meta: refresh_inventory
+    - name: Add servers to the backend network
+      hcloud_server_network:
+        api_token: "{{ hcloud_token }}"
+        network: "{{ env_name }}-cluster-backend"
+        server: "{{ item }}"
+        state: "{{ environment_state }}"
+      with_inventory_hostnames:
+        - all
+      when: environment_state == "present"
+      ignore_errors: yes
