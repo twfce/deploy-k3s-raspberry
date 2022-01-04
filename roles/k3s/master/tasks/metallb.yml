@@ -1,0 +1,29 @@
+---
+- name: Create metallb namespace
+  become: yes
+  command: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/namespace.yaml
+  when: inventory_hostname == master_node
+
+- name: Deploy metallb
+  become: yes
+  command: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.11.0/manifests/metallb.yaml
+  when: inventory_hostname == master_node
+
+- name: Create metallb config
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: ~{{ ansible_user }}/.kube/config
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        namespace: metallb-system
+        name: config
+      data:
+        config: |
+          address-pools:
+          - name: default
+            protocol: layer2
+            addresses:
+            - {{ metallb_ip_range }}
+  when: inventory_hostname == master_node
