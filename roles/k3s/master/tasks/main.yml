@@ -59,8 +59,17 @@
     token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
   when: inventory_hostname == master_node
 
-- wait_for:
-    timeout: 100
+- name: Wait for API to get available
+  ansible.builtin.uri:
+    url: https://{{ master_ip }}:6443
+    validate_certs: false
+    status_code: 
+      - 200
+      - 401
+  register: result
+  until: "result.status == 401"
+  retries: 10
+  delay: 10
 
 - name: Copy K3s service file (Join other masters)
   register: k3s_service
@@ -123,4 +132,3 @@
     state: link
 
 - include_tasks: metallb.yml
-- include_tasks: longhorn.yml

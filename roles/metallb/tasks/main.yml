@@ -1,0 +1,21 @@
+---
+- name: Deploy metallb
+  become: true
+  command: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
+  run_once: true
+
+- name: Create metallb config
+  become: true
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    definition:
+      apiVersion: "metallb.io/v1beta1"
+      kind: IPAddressPool
+      metadata:
+        namespace: metallb-system
+        name: ip-pool
+      spec:
+        addresses:
+        - "{{ metallb_ip_range }}"
+  run_once: true
