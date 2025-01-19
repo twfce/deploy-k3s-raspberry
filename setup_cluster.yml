@@ -19,7 +19,7 @@
   roles:
     - role: raspberrypi
     - role: prereq
-    - role: download    
+    - role: download
 
 - hosts: master
   vars_files:
@@ -34,11 +34,3 @@
   become: yes
   roles:
     - role: k3s/node
-
-- hosts: master
-  vars_files:
-    - vars/common.yml
-  become: yes
-  roles:
-    - role: longhorn
-    - role: metallb

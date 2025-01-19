@@ -1,21 +1,34 @@
 ---
-- name: Deploy metallb
-  become: true
-  command: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
-  run_once: true
-
-- name: Create metallb config
-  become: true
+- name: Deploy MetalLB to the cluster
   kubernetes.core.k8s:
     state: present
-    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    src: files/metallb-native.yaml
+
+- name: Pause for 1 minute to setup metallb 
+  ansible.builtin.pause:
+    minutes: 1
+
+- name: Create IPAdressPool for MetalLB
+  kubernetes.core.k8s:
+    state: present
     definition:
-      apiVersion: "metallb.io/v1beta1"
+      apiVersion: metallb.io/v1beta1
       kind: IPAddressPool
       metadata:
+        name: default-ip-pool
         namespace: metallb-system
-        name: ip-pool
       spec:
-        addresses:
-        - "{{ metallb_ip_range }}"
-  run_once: true
+        addresses: "{{ metallb_ip_address_pool }}"
+
+- name: Create L2Advertisement for MetalLB
+  kubernetes.core.k8s:
+    state: present
+    definition:  
+      apiVersion: metallb.io/v1beta1
+      kind: L2Advertisement
+      metadata:
+        name: metallb-pool
+        namespace: metallb-system
+      spec:
+        ipAddressPools:
+        - default-ip-pool

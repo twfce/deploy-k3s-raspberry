@@ -1,8 +1,12 @@
-k3s_version: v1.27.2+k3s1
+k3s_version: v1.31.4+k3s1
 systemd_dir: /etc/systemd/system
 master_node: "{{ groups['master'][0] }}"
 master_ip: "{{ hostvars[groups['master'][0]]['ansible_facts']['all_ipv4_addresses'] | ipaddr('private') | first }}"
 extra_cluster_init_master_args: "--disable servicelb"
 extra_server_args: "--disable servicelb"
 extra_agent_args: ""
-metallb_ip_range: 192.168.56.150-192.168.56.160"
+metallb_ip_address_pool: 
+  - "10.99.16.230-10.99.16.250"
+
+rancher_hostname: rancher.k8s.seitle.io
+rancher_bootstrap_password: "InitialPassword"

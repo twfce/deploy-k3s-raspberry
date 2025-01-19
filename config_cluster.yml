@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/common.yml
+  roles:    
+    - role: metallb
+    - role: cert-manager
+    - role: rancher
+    - role: longhorn

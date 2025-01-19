@@ -1,5 +1,3 @@
 ---
 - name: Deploy longhorn.io
-  become: yes
-  command: kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.4.2/deploy/longhorn.yaml
-  run_once: true
+  command: kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.7.2/deploy/longhorn.yaml 

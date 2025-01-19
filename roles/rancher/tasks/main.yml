@@ -1,0 +1,22 @@
+---
+- name: Add rancher helm repository
+  kubernetes.core.helm_repository:
+    name: rancher-latest
+    repo_url: "https://releases.rancher.com/server-charts/latest"
+
+- name: Create a k8s namespace for rancher
+  kubernetes.core.k8s:
+    name: cattle-system
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Deploy rancher
+  kubernetes.core.helm:
+    name: rancher
+    chart_ref: rancher-latest/rancher
+    release_namespace: cattle-system
+    set_values:
+      - value: "hostname={{ rancher_hostname }}"
+      - value: "bootstrapPassword={{ rancher_bootstrap_password }}"
+      - value: "ingress.tls.source=rancher"
